@@ -9,5 +9,9 @@
     "@amp/model-provider": "workspace:*",
     "@amp/storage-sqlite": "workspace:*"
   },
-  "scripts": { "build": "tsc -p tsconfig.json" }
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "watch": "tsc -b --watch"
+  }
 }

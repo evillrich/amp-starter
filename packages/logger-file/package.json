@@ -7,6 +7,8 @@
     "@amp/engine-spi": "workspace:*"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "watch": "tsc -b --watch"
   }
 }

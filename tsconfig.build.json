@@ -1,0 +1,16 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/engine-spi" },
+    { "path": "packages/sdk" },
+    { "path": "packages/engine-basic" },
+    { "path": "packages/model-provider" },
+    { "path": "packages/storage" },
+    { "path": "packages/storage-sqlite" },
+    { "path": "packages/logger-file" },
+    { "path": "packages/content-handlers-text" },
+    { "path": "packages/content-handlers-csv" },
+    { "path": "packages/tools-core" },
+    { "path": "apps/cli" }
+  ]
+}
