@@ -10,8 +10,8 @@ export interface ModelProvider {
 
 export interface StorageBundle {
   // v0 minimal – expand later
-  createWorkspace(name: string): Promise<{ id: string; name: string }>;
-  listWorkspaces(): Promise<Array<{ id: string; name: string }>>;
+  createProject(name: string): Promise<{ id: string; name: string }>;
+  listProjects(): Promise<Array<{ id: string; name: string }>>;
 }
 
 export interface RunLogger {
@@ -19,7 +19,7 @@ export interface RunLogger {
 }
 
 export interface AgentContext {
-  workspaceId: string;
+  projectId: string;
   userId: string;
   input: { text: string };
   tools: ToolDescriptor[];

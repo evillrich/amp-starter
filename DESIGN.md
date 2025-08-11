@@ -2,7 +2,7 @@
 
 ## Vision (target state, guiding v0)
 
-* **Document-centric workspace.** Everything you work on lives in the workspace with immutable versions, diffs, and run history.
+* **Document-centric project.** Everything you work on lives in the project with immutable versions, diffs, and run history.
 * **Progressive complexity.** v0 supports **Markdown, text, CSV**; later we add native viewers/merges for Office & Google without changing the UX or storage model.
 * **Same flow always:** import → version → diff/merge → export (and, later, sync/suggest).
 
@@ -15,25 +15,25 @@
 
 ## CLI (initial surface)
 
-### Workspaces
-* `amp ws create <name>` → `ws_...`
-* `amp ws list`
-* `amp ws show <workspaceId>`
+### Projects
+* `amp project create <name>` → `ws_...`
+* `amp project list`
+* `amp project show <projectId>`
 
 ### Artifacts / versions
-* `amp ws artifact add <workspaceId> <path> --name "Label" [--comment "..."]`
-* `amp ws artifact list <workspaceId> [--path "folder/sub"]`
-* `amp ws artifact history <artifactId>`
-* `amp ws artifact diff <artifactId> --from vN --to vM`
-* `amp ws artifact diff <artifactId> --with-prev vN`
-* `amp ws artifact merge <artifactId> --base vB --ours vO --theirs vT` (md/txt)
-* `amp ws artifact revert <artifactId> --to vN` (creates new version equal to vN)
-* `amp ws artifact export <artifactId> --version vN --out ./file.md|.txt|.csv`
+* `amp project artifact add <projectId> <path> --name "Label" [--comment "..."]`
+* `amp project artifact list <projectId> [--path "folder/sub"]`
+* `amp project artifact history <artifactId>`
+* `amp project artifact diff <artifactId> --from vN --to vM`
+* `amp project artifact diff <artifactId> --with-prev vN`
+* `amp project artifact merge <artifactId> --base vB --ours vO --theirs vT` (md/txt)
+* `amp project artifact revert <artifactId> --to vN` (creates new version equal to vN)
+* `amp project artifact export <artifactId> --version vN --out ./file.md|.txt|.csv`
 
 ### Runs (agents)
-* `amp run <assistantId> <workspaceId> --input "Prompt" [--auto-approve] [--label "..."] [--tag t]`
-* `amp log tail [--workspace <id> | --run <id>]`
-* `amp ws run diff <runId>` (show all file deltas this run produced)
+* `amp run <assistantId> <projectId> --input "Prompt" [--auto-approve] [--label "..."] [--tag t]`
+* `amp log tail [--project <id> | --run <id>]`
+* `amp project run diff <runId>` (show all file deltas this run produced)
 
 ### Config / env
 * Global flags: `--data <dir>`, `--endpoint <url>`, `--model <name>`
@@ -60,7 +60,7 @@
 
 * **Auto‑approve flags:** `--auto-approve`, `--max-changes`, `--max-size-mb`, `--abort-on-conflict`.
 * **History UX:** `history` lists versions with (author | at | comment | run label).
-* **Run grouping:** `ws run diff <runId>` shows everything changed that run.
+* **Run grouping:** `project run diff <runId>` shoproject everything changed that run.
 
 ## Monorepo structure (pnpm)
 

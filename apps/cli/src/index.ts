@@ -22,57 +22,57 @@ function getDataDir(opt?: string) {
   return opt ? path.resolve(base, opt) : path.resolve(base, ".amp");
 }
 
-// --- ws (workspace) group ----------------------------------------------------
-const ws = program
-  .command("ws")
-  .description("Workspace commands")
+// --- project (project) group ----------------------------------------------------
+const project = program
+  .command("project")
+  .description("Project commands")
   .option("--data <dir>", "Data directory (default: ./.amp)");
 
-ws
+project
   .command("create <name>")
-  .description("Create a workspace")
+  .description("Create a project")
   .action(async (name) => {
-    const parentOpts = ws.opts<{ data?: string }>();
+    const parentOpts = project.opts<{ data?: string }>();
     const s = createSqlite(getDataDir(parentOpts.data));
-    const { id } = await s.createWorkspace(name);
+    const { id } = await s.createProject(name);
     console.log(id);
   });
 
-ws
+project
   .command("list")
-  .description("List workspaces")
+  .description("List projects")
   .action(async () => {
-    const parentOpts = ws.opts<{ data?: string }>();
+    const parentOpts = project.opts<{ data?: string }>();
     const s = createSqlite(getDataDir(parentOpts.data));
-    const rows = await s.listWorkspaces();
+    const rows = await s.listProjects();
     if (!rows.length) return console.log("(none)");
     for (const w of rows) console.log(`${w.id}\t${w.name}`);
   });
 
-ws
-  .command("show <workspaceId>")
-  .description("Show a workspace")
-  .action(async (workspaceId) => {
-    const parentOpts = ws.opts<{ data?: string }>();
+project
+  .command("show <projectId>")
+  .description("Show a project")
+  .action(async (projectId) => {
+    const parentOpts = project.opts<{ data?: string }>();
     const s = createSqlite(getDataDir(parentOpts.data));
-    const w = await s.getWorkspace(workspaceId);
+    const w = await s.getProject(projectId);
     if (!w) return console.error("Not found");
     console.log(JSON.stringify(w, null, 2));
   });
 
-// --- ws artifact -------------------------------------------------------------
-const artifact = ws.command("artifact").description("Artifact commands");
+// --- project artifact -------------------------------------------------------------
+const artifact = project.command("artifact").description("Artifact commands");
 
 artifact
-  .command("add <workspaceId> <path>")
+  .command("add <projectId> <path>")
   .description("Add a file as a versioned artifact")
   .option("--name <label>", "Display name (defaults to filename)")
   .option("--comment <comment>", "Version comment")
-  .action(async (workspaceId, filePath, opts) => {
-    const parentOpts = ws.opts<{ data?: string }>();
+  .action(async (projectId, filePath, opts) => {
+    const parentOpts = project.opts<{ data?: string }>();
     const s = createSqlite(getDataDir(parentOpts.data));
     const absPath = path.resolve(callCwd(), filePath);   // ← resolve against caller dir
-    const res = await s.addArtifactFromFile(workspaceId, absPath, {
+    const res = await s.addArtifactFromFile(projectId, absPath, {
       name: opts.name,
       comment: opts.comment,
       createdBy: "user_local",
@@ -84,7 +84,7 @@ artifact
   .command("history <artifactId>")
   .description("Show artifact versions")
   .action(async (artifactId) => {
-    const parentOpts = ws.opts<{ data?: string }>();
+    const parentOpts = project.opts<{ data?: string }>();
     const s = createSqlite(getDataDir(parentOpts.data));
     const rows = await s.getArtifactHistory(artifactId);
     if (!rows.length) return console.log("(none)");
@@ -99,7 +99,7 @@ artifact
   .option("--version <v>", "Version number or 'latest'", "latest")
   .option("--out <path>", "Output file path")
   .action(async (artifactId, opts: { version: string; out?: string }) => {
-    const parentOpts = ws.opts<{ data?: string }>();
+    const parentOpts = project.opts<{ data?: string }>();
     const s = createSqlite(getDataDir(parentOpts.data));
     const v = opts.version === "latest" ? "latest" : Number(String(opts.version).replace(/^v/i, ""));
     const out = opts.out ? path.resolve(callCwd(), opts.out) : undefined;  // ← here
@@ -109,15 +109,15 @@ artifact
 
 // --- run ---------------------------------------------------------------------
 program
-  .command("run <assistantId> <workspaceId>")
+  .command("run <assistantId> <projectId>")
   .description("Run an assistant")
   .option("--input <text>", "Input prompt", "")
   .option("--auto-approve", "Auto-accept changes (no review)", false)
   .option("--label <label>", "Run label")
   .option("--tag <tag...>", "Tags (space-separated)", [])
-  .action(async (_assistantId, workspaceId, opts) => {
+  .action(async (_assistantId, projectId, opts) => {
     const engine = new BasicEngine();
-    const ctx = createDefaultContext(workspaceId, opts.input || "");
+    const ctx = createDefaultContext(projectId, opts.input || "");
     const res = await engine.runTurn(ctx);
     if (res.messages?.length) {
       console.log(res.messages[0].content ?? "");
