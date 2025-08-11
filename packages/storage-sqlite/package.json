@@ -12,5 +12,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "postinstall": "node -e \"try{require('better-sqlite3');}catch(e){process.exit(1)}\" || pnpm rebuild better-sqlite3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13"
   }
 }

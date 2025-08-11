@@ -1,50 +1,35 @@
-import { BasicEngine } from "@amp/engine-basic";
-import { EchoModel } from "@amp/model-provider";
-import { createSqlite } from "@amp/storage-sqlite";
-import type { AgentContext, RunLogger } from "@amp/engine-spi";
-import fs from "fs";
-import path from "path";
-import crypto from "crypto";
+export * from "@amp/engine-spi"; // convenience re-exports
 
-function ensureDir(p: string) {
-  if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+import type { AgentContext, ModelProvider, RunLogger } from "@amp/engine-spi";
+import type { StorageBundle } from "@amp/engine-spi";
+
+/** tiny id helper — stays pure */
+export function randId(prefix: string) {
+  const rnd = Math.random().toString(36).slice(2, 8);
+  const ts = Date.now().toString(36);
+  return `${prefix}_${ts}_${rnd}`;
 }
 
-function getDataDir() {
-  return process.env.AMP_DATA || path.resolve(process.cwd(), ".amp");
+/** noop logger for tests */
+export function noopLogger(): RunLogger {
+  return { event() {} };
 }
 
-function newRunId() {
-  return `run_${Date.now().toString(36)}_${crypto.randomBytes(3).toString("hex")}`;
-}
-
-export function createLogger(runId = newRunId()): RunLogger {
-  const dataDir = getDataDir();
-  const runsDir = path.join(dataDir, "runs");
-  ensureDir(runsDir);
-  const logPath = path.join(runsDir, `${runId}.jsonl`);
+/** pure context builder — caller injects all env-specific deps */
+export function createAgentContext(args: {
+  projectId: string;
+  inputText: string;
+  model: ModelProvider;
+  storage: StorageBundle;
+  logger: RunLogger;
+}): AgentContext {
   return {
-    event(kind, payload) {
-      const rec = { ts: Date.now(), kind, payload };
-      fs.appendFileSync(logPath, JSON.stringify(rec) + "\n");
-      // mirror to console for dev:
-      console.log(`[${runId}] ${kind}`, payload ?? "");
-    }
-  };
-}
-
-export function createDefaultContext(projectId: string, inputText: string): AgentContext {
-  const model = new EchoModel();
-  const storage = createSqlite(getDataDir());
-  const logger = createLogger(); // new run id each time
-
-  return {
-    projectId,
+    projectId: args.projectId,
     userId: "user_local",
-    input: { text: inputText },
+    input: { text: args.inputText },
     tools: [],
-    model,
-    storage,
-    logger
+    model: args.model,
+    storage: args.storage,
+    logger: args.logger
   };
 }

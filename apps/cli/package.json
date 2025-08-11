@@ -10,6 +10,7 @@
     "@amp/sdk": "workspace:*",
     "@amp/engine-basic": "workspace:*",
     "@amp/model-provider": "workspace:*",
+    "@amp/logger-file": "workspace:*",
     "commander": "^12.1.0",
     "uuid": "^9.0.1"
   },

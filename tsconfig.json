@@ -15,6 +15,7 @@
       "@amp/engine-basic": ["packages/engine-basic/src"],
       "@amp/model-provider": ["packages/model-provider/src"],
       "@amp/storage-sqlite": ["packages/storage-sqlite/src"],
+      "@amp/logger-file": ["packages/logger-file/src"],
       "@amp/storage": ["packages/storage/src"],
       "@amp/content-handlers-text": ["packages/content-handlers-text/src"],
       "@amp/content-handlers-csv": ["packages/content-handlers-csv/src"],

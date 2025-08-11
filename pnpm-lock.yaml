@@ -8,9 +8,6 @@ importers:
 
   .:
     devDependencies:
-      '@types/better-sqlite3':
-        specifier: ^7.6.13
-        version: 7.6.13
       '@types/node':
         specifier: ^24.2.1
         version: 24.2.1
@@ -41,6 +38,9 @@ importers:
       '@amp/engine-basic':
         specifier: workspace:*
         version: link:../../packages/engine-basic
+      '@amp/logger-file':
+        specifier: workspace:*
+        version: link:../../packages/logger-file
       '@amp/model-provider':
         specifier: workspace:*
         version: link:../../packages/model-provider
@@ -72,6 +72,12 @@ importers:
         version: link:../engine-spi
 
   packages/engine-spi: {}
+
+  packages/logger-file:
+    dependencies:
+      '@amp/engine-spi':
+        specifier: workspace:*
+        version: link:../engine-spi
 
   packages/model-provider:
     dependencies:
@@ -114,6 +120,10 @@ importers:
       drizzle-orm:
         specifier: ^0.31.0
         version: 0.31.4(@types/better-sqlite3@7.6.13)(better-sqlite3@12.2.0)
+    devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
 
   packages/tools-core: {}
 

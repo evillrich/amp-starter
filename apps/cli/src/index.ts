@@ -1,11 +1,19 @@
-import { Command } from "commander";
-import { createDefaultContext } from "@amp/sdk";
-import { BasicEngine } from "@amp/engine-basic";
-import { createSqlite } from "@amp/storage-sqlite";
 import path from "path";
+import { Command } from "commander";
+import { BasicEngine } from "@amp/engine-basic";
+import { EchoModel } from "@amp/model-provider";
+import { createSqlite } from "@amp/storage-sqlite";
+import { createAgentContext, randId } from "@amp/sdk";
+import { createFileRunLogger } from "@amp/logger-file";
 
 const program = new Command();
-program.name("amp").description("Amp CLI (v0 skeleton)").version("0.1.0");
+program.name("amp").description("Amp CLI (v0)").version("0.1.0");
+program.enablePositionalOptions();
+
+function resolveDataDir(opt?: string) {
+  const base = opt ?? process.env.AMP_DATA_DIR ?? process.env.INIT_CWD ?? process.cwd();
+  return path.resolve(base, ".amp");
+}
 
 // allow subcommand options after the command and handle pnpm's injected leading `--`
 program.enablePositionalOptions();
@@ -93,7 +101,7 @@ artifact
     }
   });
 
-  artifact
+artifact
   .command("export <artifactId>")
   .description("Export an artifact version to a file")
   .option("--version <v>", "Version number or 'latest'", "latest")
@@ -112,15 +120,37 @@ program
   .command("run <assistantId> <projectId>")
   .description("Run an assistant")
   .option("--input <text>", "Input prompt", "")
-  .option("--auto-approve", "Auto-accept changes (no review)", false)
-  .option("--label <label>", "Run label")
-  .option("--tag <tag...>", "Tags (space-separated)", [])
+  .option("--data <dir>", "Data directory (default: ./.amp)")
   .action(async (_assistantId, projectId, opts) => {
+    const dataDir = resolveDataDir(opts.data);
+    const runId = randId("run");
+
+    const storage = createSqlite(dataDir);
+    const logger = createFileRunLogger({ dataDir, runId, projectId });
+    const model = new EchoModel();
     const engine = new BasicEngine();
-    const ctx = createDefaultContext(projectId, opts.input || "");
-    const res = await engine.runTurn(ctx);
-    if (res.messages?.length) {
-      console.log(res.messages[0].content ?? "");
+
+    const ctx = createAgentContext({
+      projectId,
+      inputText: opts.input || "",
+      model,
+      storage,
+      logger
+    });
+
+    logger.event("run.started", { assistantId: _assistantId });
+
+    try {
+      const res = await engine.runTurn(ctx);
+      const out = res.messages?.[0]?.content ?? "";
+      console.log(out);
+      logger.event("model.response", { text: out });
+      logger.event("run.finished", { status: "ok" });
+    } catch (err: any) {
+      logger.event("run.error", { message: String(err?.message || err) });
+      throw err;
+    } finally {
+      (logger as any).close?.();
     }
   });
 
