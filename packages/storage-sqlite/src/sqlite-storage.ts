@@ -4,10 +4,10 @@ import crypto from "crypto";
 import Database from "better-sqlite3";
 import type { StorageBundle } from "@amp/engine-spi";
 
-type WorkspaceRow = { id: string; name: string; created_at: number };
+type ProjectRow = { id: string; name: string; created_at: number };
 type ItemRow = {
   id: string;
-  workspace_id: string;
+  project_id: string;
   parent_id: string | null;
   kind: "folder" | "file";
   name: string;
@@ -60,15 +60,15 @@ function extFor(mime: string | null | undefined) {
 
 function bootstrap(db: Database.Database) {
   db.exec(`
-    CREATE TABLE IF NOT EXISTS workspace (
+    CREATE TABLE IF NOT EXISTS project (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       created_at INTEGER DEFAULT (strftime('%s','now'))
     );
 
-    CREATE TABLE IF NOT EXISTS workspace_item (
+    CREATE TABLE IF NOT EXISTS project_item (
       id TEXT PRIMARY KEY,
-      workspace_id TEXT NOT NULL REFERENCES workspace(id) ON DELETE CASCADE,
+      project_id TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
       parent_id TEXT,
       kind TEXT NOT NULL CHECK (kind IN ('folder','file')),
       name TEXT NOT NULL,
@@ -78,18 +78,18 @@ function bootstrap(db: Database.Database) {
       created_by TEXT NOT NULL,
       created_at INTEGER DEFAULT (strftime('%s','now')),
       updated_at INTEGER DEFAULT (strftime('%s','now')),
-      UNIQUE (workspace_id, parent_id, slug)
+      UNIQUE (project_id, parent_id, slug)
     );
 
     CREATE TABLE IF NOT EXISTS artifact (
       id TEXT PRIMARY KEY,
-      item_id TEXT NOT NULL REFERENCES workspace_item(id) ON DELETE CASCADE,
+      item_id TEXT NOT NULL REFERENCES project_item(id) ON DELETE CASCADE,
       mime_type TEXT
     );
 
     CREATE TABLE IF NOT EXISTS artifact_version (
       id TEXT PRIMARY KEY,
-      item_id TEXT NOT NULL REFERENCES workspace_item(id) ON DELETE CASCADE,
+      item_id TEXT NOT NULL REFERENCES project_item(id) ON DELETE CASCADE,
       version INTEGER NOT NULL,
       size_bytes INTEGER NOT NULL,
       sha256 TEXT,
@@ -115,9 +115,9 @@ function openDb(dataDir: string) {
 
 /** Rich API we’ll use from the CLI. Also satisfies the minimal StorageBundle. */
 export interface SqliteApi extends StorageBundle {
-  getWorkspace(id: string): Promise<WorkspaceRow | undefined>;
+  getProject(id: string): Promise<ProjectRow | undefined>;
   addArtifactFromFile(
-    workspaceId: string,
+    projectId: string,
     filePath: string,
     opts?: { name?: string; comment?: string; createdBy?: string }
   ): Promise<{ artifactId: string; itemId: string; version: number }>;
@@ -130,13 +130,13 @@ export function createSqlite(dataDir: string): SqliteApi {
 
   return {
     // --- StorageBundle (minimal) ---
-    async createWorkspace(name: string) {
-      const id = randId("ws");
-      db.prepare(`INSERT INTO workspace (id, name) VALUES (?, ?)`).run(id, name);
+    async createProject(name: string) {
+      const id = randId("proj");
+      db.prepare(`INSERT INTO project (id, name) VALUES (?, ?)`).run(id, name);
       return { id, name };
     },
-    async listWorkspaces() {
-      const rows = db.prepare(`SELECT id, name FROM workspace ORDER BY created_at DESC`).all() as Array<{
+    async listProjects() {
+      const rows = db.prepare(`SELECT id, name FROM project ORDER BY created_at DESC`).all() as Array<{
         id: string;
         name: string;
       }>;
@@ -144,16 +144,16 @@ export function createSqlite(dataDir: string): SqliteApi {
     },
 
     // --- extras we use from CLI ---
-    async getWorkspace(id: string) {
-      const row = db.prepare(`SELECT id, name, created_at FROM workspace WHERE id = ?`).get(id) as
-        | WorkspaceRow
+    async getProject(id: string) {
+      const row = db.prepare(`SELECT id, name, created_at FROM project WHERE id = ?`).get(id) as
+        | ProjectRow
         | undefined;
       return row;
     },
 
-    async addArtifactFromFile(workspaceId, filePath, opts) {
-      const ws = db.prepare(`SELECT id FROM workspace WHERE id = ?`).get(workspaceId) as { id: string } | undefined;
-      if (!ws) throw new Error(`Workspace not found: ${workspaceId}`);
+    async addArtifactFromFile(projectId, filePath, opts) {
+      const project = db.prepare(`SELECT id FROM project WHERE id = ?`).get(projectId) as { id: string } | undefined;
+      if (!project) throw new Error(`Project not found: ${projectId}`);
 
       const createdBy = opts?.createdBy ?? "user_local";
       const fileBytes = fs.readFileSync(filePath);
@@ -163,14 +163,14 @@ export function createSqlite(dataDir: string): SqliteApi {
       const slugBase = slugify(name);
       const mime = detectMime(filePath);
 
-      // Unique slug within (workspaceId, parentId=null)
+      // Unique slug within (projectId, parentId=null)
       let slug = slugBase || randId("file");
       for (; ;) {
         const exists = db
           .prepare(
-            `SELECT 1 FROM workspace_item WHERE workspace_id = ? AND parent_id IS NULL AND slug = ? LIMIT 1`
+            `SELECT 1 FROM project_item WHERE project_id = ? AND parent_id IS NULL AND slug = ? LIMIT 1`
           )
-          .get(workspaceId, slug);
+          .get(projectId, slug);
         if (!exists) break;
         slug = `${slugBase}-${crypto.randomBytes(2).toString("hex")}`;
       }
@@ -178,10 +178,10 @@ export function createSqlite(dataDir: string): SqliteApi {
       const tx = db.transaction(() => {
         const itemId = randId("itm");
         db.prepare(
-          `INSERT INTO workspace_item
-            (id, workspace_id, parent_id, kind, name, slug, sort_index, is_deleted, created_by)
+          `INSERT INTO project_item
+            (id, project_id, parent_id, kind, name, slug, sort_index, is_deleted, created_by)
            VALUES (?, ?, NULL, 'file', ?, ?, 0, 0, ?)`
-        ).run(itemId, workspaceId, name, slug, createdBy);
+        ).run(itemId, projectId, name, slug, createdBy);
 
         const artifactId = randId("art");
         db.prepare(`INSERT INTO artifact (id, item_id, mime_type) VALUES (?, ?, ?)`).run(artifactId, itemId, mime);

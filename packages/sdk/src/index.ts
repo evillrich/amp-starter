@@ -33,13 +33,13 @@ export function createLogger(runId = newRunId()): RunLogger {
   };
 }
 
-export function createDefaultContext(workspaceId: string, inputText: string): AgentContext {
+export function createDefaultContext(projectId: string, inputText: string): AgentContext {
   const model = new EchoModel();
   const storage = createSqlite(getDataDir());
   const logger = createLogger(); // new run id each time
 
   return {
-    workspaceId,
+    projectId,
     userId: "user_local",
     input: { text: inputText },
     tools: [],

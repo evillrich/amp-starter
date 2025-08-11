@@ -1,15 +1,15 @@
 import { sqliteTable, text, integer, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
-export const workspace = sqliteTable('workspace', {
+export const project = sqliteTable('project', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 });
 
-export const workspaceItem = sqliteTable('workspace_item', {
+export const projectItem = sqliteTable('project_item', {
   id: text('id').primaryKey(),                  // itm_...
-  workspaceId: text('workspace_id').notNull().references(() => workspace.id, { onDelete: 'cascade' }),
+  projectId: text('project_id').notNull().references(() => project.id, { onDelete: 'cascade' }),
   parentId: text('parent_id'),
   kind: text('kind', { enum: ['folder','file'] }).notNull(),
   name: text('name').notNull(),
@@ -19,17 +19,17 @@ export const workspaceItem = sqliteTable('workspace_item', {
   createdBy: text('created_by').notNull(),
   createdAt: integer('created_at', { mode:'timestamp'}).default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode:'timestamp'}).default(sql`CURRENT_TIMESTAMP`),
-}, t => ({ byParent: uniqueIndex('u_ws_parent_slug').on(t.workspaceId, t.parentId, t.slug) }));
+}, t => ({ byParent: uniqueIndex('u_ws_parent_slug').on(t.projectId, t.parentId, t.slug) }));
 
 export const artifact = sqliteTable('artifact', {
   id: text('id').primaryKey(),                  // art_...
-  itemId: text('item_id').notNull().references(() => workspaceItem.id, { onDelete: 'cascade' }),
+  itemId: text('item_id').notNull().references(() => projectItem.id, { onDelete: 'cascade' }),
   mimeType: text('mime_type'),                  // v0: text/markdown | text/plain | text/csv
 });
 
 export const artifactVersion = sqliteTable('artifact_version', {
   id: text('id').primaryKey(),                  // arv_...
-  itemId: text('item_id').notNull().references(() => workspaceItem.id, { onDelete: 'cascade' }),
+  itemId: text('item_id').notNull().references(() => projectItem.id, { onDelete: 'cascade' }),
   version: integer('version').notNull(),        // 1..N (unique per item)
   sizeBytes: integer('size_bytes').notNull(),
   sha256: text('sha256'),
@@ -44,7 +44,7 @@ export const artifactVersion = sqliteTable('artifact_version', {
 
 export const run = sqliteTable('run', {
   id: text('id').primaryKey(),                  // run_...
-  workspaceId: text('workspace_id').notNull().references(() => workspace.id, { onDelete: 'cascade' }),
+  projectId: text('project_id').notNull().references(() => project.id, { onDelete: 'cascade' }),
   assistantId: text('assistant_id').notNull(),
   engineId: text('engine_id').notNull(),
   inputText: text('input_text').notNull(),
