@@ -1,8 +1,15 @@
 {
   "name": "@amp/engine-basic",
   "version": "0.1.0",
+  "private": false,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": ["dist"],
   "dependencies": { "@amp/engine-spi": "workspace:*" },
-  "scripts": { "build": "tsc -p tsconfig.json" }
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "watch": "tsc -b --watch"
+  },
+  "sideEffects": false
 }

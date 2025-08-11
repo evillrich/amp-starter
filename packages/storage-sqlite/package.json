@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": ["dist"],
   "dependencies": {
     "@amp/engine-spi": "workspace:*",
     "@amp/storage": "workspace:*",
@@ -10,7 +11,9 @@
     "drizzle-orm": "^0.31.0"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "watch": "tsc -b --watch",
     "postinstall": "node -e \"try{require('better-sqlite3');}catch(e){process.exit(1)}\" || pnpm rebuild better-sqlite3"
   },
   "devDependencies": {

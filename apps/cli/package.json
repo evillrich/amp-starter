@@ -11,6 +11,7 @@
     "@amp/engine-basic": "workspace:*",
     "@amp/model-provider": "workspace:*",
     "@amp/logger-file": "workspace:*",
+    "@amp/storage-sqlite": "workspace:*",
     "commander": "^12.1.0",
     "uuid": "^9.0.1"
   },
@@ -20,6 +21,8 @@
   },
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register src/index.ts",
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "watch": "tsc -b --watch"
   }
 }

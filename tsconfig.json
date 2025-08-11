@@ -1,27 +1,3 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
-    "resolveJsonModule": true,
-    "outDir": "dist",
-    "rootDir": ".",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@amp/engine-spi": ["packages/engine-spi/src"],
-      "@amp/engine-basic": ["packages/engine-basic/src"],
-      "@amp/model-provider": ["packages/model-provider/src"],
-      "@amp/storage-sqlite": ["packages/storage-sqlite/src"],
-      "@amp/logger-file": ["packages/logger-file/src"],
-      "@amp/storage": ["packages/storage/src"],
-      "@amp/content-handlers-text": ["packages/content-handlers-text/src"],
-      "@amp/content-handlers-csv": ["packages/content-handlers-csv/src"],
-      "@amp/tools-core": ["packages/tools-core/src"],
-      "@amp/sdk": ["packages/sdk/src"]
-    }
-  },
-  "exclude": ["dist", "node_modules"]
+  "extends": "./tsconfig.base.json"
 }
